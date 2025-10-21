@@ -7,8 +7,9 @@ import * as toGeoJSON from '@tmcw/togeojson';
 import exifr from 'exifr';
 import L, { LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { Menu, X } from 'lucide-react';
 
-// ✅ Dynamic imports (Next.js SSR fix)
+// ✅ Dynamic imports
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
 const GeoJSON = dynamic(() => import('react-leaflet').then(mod => mod.GeoJSON), { ssr: false });
@@ -28,8 +29,9 @@ export default function MapView() {
   const [photoMarkers, setPhotoMarkers] = useState<PhotoMarker[]>([]);
   const [mapCenter, setMapCenter] = useState<LatLngExpression>([17.6131, 121.7270]);
   const [mapType, setMapType] = useState<'street' | 'satellite'>('street');
+  const [showPanel, setShowPanel] = useState<boolean>(false);
 
-  // 📦 Handle multiple KMZ uploads (Boundaries)
+  // 📦 Upload KMZ
   const handleKmzFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
@@ -51,11 +53,10 @@ export default function MapView() {
         console.error('Error reading KMZ:', error);
       }
     }
-
     setGeoData(prev => [...prev, ...geojsonList]);
   };
 
-  // 🗺️ Handle multiple Tracking .KML uploads
+  // 🗺️ Upload KML tracks
   const handleTrackingFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
@@ -72,11 +73,10 @@ export default function MapView() {
         console.error('Error reading KML:', error);
       }
     }
-
     setTrackingData(prev => [...prev, ...geojsonList]);
   };
 
-  // 📸 Handle geotagged photos
+  // 📸 Handle Photos
   const handlePhotos = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
@@ -103,7 +103,7 @@ export default function MapView() {
     setPhotoMarkers(prev => [...prev, ...markers]);
   };
 
-  // 🧭 Auto-center to fit all data
+  // 🧭 Auto center
   useEffect(() => {
     if (!geoData.length && !trackingData.length && !photoMarkers.length) return;
 
@@ -111,22 +111,32 @@ export default function MapView() {
     geoData.forEach(g => bounds.extend(L.geoJSON(g).getBounds()));
     trackingData.forEach(t => bounds.extend(L.geoJSON(t).getBounds()));
     photoMarkers.forEach(p => bounds.extend([p.lat, p.lng]));
-
     if (bounds.isValid()) setMapCenter(bounds.getCenter());
   }, [geoData, trackingData, photoMarkers]);
 
-  // ♻️ Clear all uploaded data
+  // ♻️ Clear all
   const handleClearAll = () => {
     setGeoData([]);
     setTrackingData([]);
     setPhotoMarkers([]);
-    setMapCenter([17.6131, 121.7270]); // reset to Cagayan
+    setMapCenter([17.6131, 121.7270]);
   };
 
   return (
     <div className="relative h-screen w-full">
-      {/* Floating Control Panel */}
-      <div className="absolute top-5 left-5 z-[1000] flex flex-col gap-3 bg-white/95 backdrop-blur-md p-5 rounded-2xl shadow-xl border border-gray-200 w-[250px]">
+      {/* Toggle Button (Mobile) */}
+      <button
+        onClick={() => setShowPanel(!showPanel)}
+        className="absolute top-4 left-4 z-[1100] bg-white shadow-md p-2 rounded-full md:hidden"
+      >
+        {showPanel ? <X size={22} /> : <Menu size={22} />}
+      </button>
+
+      {/* Control Panel */}
+      <div
+        className={`absolute top-5 left-5 z-[1000] flex flex-col gap-3 bg-white/95 backdrop-blur-md p-5 rounded-2xl shadow-xl border border-gray-200 w-[260px]
+        transition-all duration-300 md:block ${showPanel ? 'block' : 'hidden'}`}
+      >
         <h2 className="text-lg font-bold text-gray-700 mb-2">📁 Map Controls</h2>
 
         <label className="upload-btn">
@@ -161,21 +171,18 @@ export default function MapView() {
           </button>
         </div>
 
-        {/* Info Text */}
         <div className="mt-3 text-xs text-gray-600 border-t border-gray-200 pt-2 leading-relaxed">
-          <p>⭐ <strong>Upload all tracks</strong> on the site under “Tracks”</p>
-          <p>⭐ <strong>Upload all geotag photos</strong> on the site under “Geotag Photos”</p>
-          <p className="mt-2 italic text-gray-500">
-            📞 Contact: <strong>Joylyn Madriaga</strong> for concerns
-          </p>
+          <p>⭐ <strong>Upload tracks</strong> as .KML</p>
+          <p>⭐ <strong>Upload photos</strong> with GPS data</p>
+          <p className="mt-2 italic text-gray-500">📞 Contact: <strong>Joylyn Madriaga</strong></p>
         </div>
       </div>
 
-      {/* Map Display */}
+      {/* Map */}
       <MapContainer center={mapCenter} zoom={10} style={{ height: '100%', width: '100%' }}>
         {mapType === 'street' ? (
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
+            attribution='&copy; OpenStreetMap contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
         ) : (
@@ -185,17 +192,14 @@ export default function MapView() {
           />
         )}
 
-        {/* Boundaries */}
         {geoData.map((geo, i) => (
           <GeoJSON key={`geo-${i}`} data={geo} pathOptions={{ color: '#007bff', weight: 2, fillOpacity: 0.2 }} />
         ))}
 
-        {/* Tracks */}
         {trackingData.map((track, i) => (
           <GeoJSON key={`track-${i}`} data={track} pathOptions={{ color: 'green', weight: 3 }} />
         ))}
 
-        {/* Geotagged Photos */}
         {photoMarkers.map((photo, i) => (
           <CircleMarker
             key={i}
