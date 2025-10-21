@@ -127,41 +127,43 @@ export default function MapView() {
       {/* Toggle Button (Mobile) */}
       <button
         onClick={() => setShowPanel(!showPanel)}
-        className="absolute top-4 left-4 z-[1100] bg-white shadow-md p-2 rounded-full md:hidden"
+        className="absolute top-4 right-4 z-[1100] bg-white shadow-md p-2 rounded-full md:hidden"
       >
         {showPanel ? <X size={22} /> : <Menu size={22} />}
       </button>
-
+  
       {/* Control Panel */}
       <div
-        className={`absolute top-5 left-5 z-[1000] flex flex-col gap-3 bg-white/95 backdrop-blur-md p-5 rounded-2xl shadow-xl border border-gray-200 w-[260px]
+        className={`absolute top-5 left-5 z-[1000] flex flex-col md:gap-4 gap-3 bg-white/95 backdrop-blur-md p-5 rounded-2xl shadow-xl border border-gray-200 w-[280px]
         transition-all duration-300 md:block ${showPanel ? 'block' : 'hidden'}`}
       >
-        <h2 className="text-lg font-bold text-gray-700 mb-2">📁 Map Controls</h2>
-
-        <label className="upload-btn">
-          🌐 Upload Boundaries (.KMZ)
-          <input type="file" accept=".kmz" multiple onChange={handleKmzFiles} className="hidden" />
-        </label>
-
-        <label className="upload-btn">
-          🛰️ Upload Tracks (.KML)
-          <input type="file" accept=".kml" multiple onChange={handleTrackingFiles} className="hidden" />
-        </label>
-
-        <label className="upload-btn">
-          📸 Upload Geotagged Photos
-          <input type="file" accept="image/*" multiple onChange={handlePhotos} className="hidden" />
-        </label>
-
-        <button
-          onClick={handleClearAll}
-          className="mt-1 w-full text-sm bg-red-500 hover:bg-red-600 text-white font-medium py-2 rounded-lg transition-all"
-        >
-          🗑️ Clear Inputs
-        </button>
-
-        <div className="flex items-center justify-between mt-2 bg-gray-100 p-2 rounded-lg">
+        <h2 className="text-lg font-bold text-gray-700 mb-3">📁 Map Controls</h2>
+  
+        <div className="flex flex-col gap-3">
+          <label className="upload-btn">
+            🌐 Upload Boundaries (.KMZ)
+            <input type="file" accept=".kmz" multiple onChange={handleKmzFiles} className="hidden" />
+          </label>
+  
+          <label className="upload-btn">
+            🛰️ Upload Tracks (.KML)
+            <input type="file" accept=".kml" multiple onChange={handleTrackingFiles} className="hidden" />
+          </label>
+  
+          <label className="upload-btn">
+            📸 Upload Geotagged Photos
+            <input type="file" accept="image/*" multiple onChange={handlePhotos} className="hidden" />
+          </label>
+  
+          <button
+            onClick={handleClearAll}
+            className="mt-1 w-full text-sm bg-red-500 hover:bg-red-600 text-white font-medium py-2 rounded-lg transition-all"
+          >
+            🗑️ Clear Inputs
+          </button>
+        </div>
+  
+        <div className="flex items-center justify-between mt-3 bg-gray-100 p-2 rounded-lg">
           <span className="text-sm font-medium text-gray-700">🗺️ View:</span>
           <button
             onClick={() => setMapType(mapType === 'street' ? 'satellite' : 'street')}
@@ -170,14 +172,14 @@ export default function MapView() {
             {mapType === 'street' ? 'Satellite' : 'Street'}
           </button>
         </div>
-
+  
         <div className="mt-3 text-xs text-gray-600 border-t border-gray-200 pt-2 leading-relaxed">
           <p>⭐ <strong>Upload tracks</strong> as .KML</p>
           <p>⭐ <strong>Upload photos</strong> with GPS data</p>
           <p className="mt-2 italic text-gray-500">📞 Contact: <strong>Joylyn Madriaga</strong></p>
         </div>
       </div>
-
+  
       {/* Map */}
       <MapContainer center={mapCenter} zoom={10} style={{ height: '100%', width: '100%' }}>
         {mapType === 'street' ? (
@@ -191,15 +193,15 @@ export default function MapView() {
             url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
           />
         )}
-
+  
         {geoData.map((geo, i) => (
           <GeoJSON key={`geo-${i}`} data={geo} pathOptions={{ color: '#007bff', weight: 2, fillOpacity: 0.2 }} />
         ))}
-
+  
         {trackingData.map((track, i) => (
           <GeoJSON key={`track-${i}`} data={track} pathOptions={{ color: 'green', weight: 3 }} />
         ))}
-
+  
         {photoMarkers.map((photo, i) => (
           <CircleMarker
             key={i}
@@ -222,7 +224,7 @@ export default function MapView() {
           </CircleMarker>
         ))}
       </MapContainer>
-
+  
       <style jsx>{`
         .upload-btn {
           display: block;
@@ -244,4 +246,5 @@ export default function MapView() {
       `}</style>
     </div>
   );
+  
 }
